@@ -2,6 +2,7 @@
 const Project = require('../models/Project');
 const projectService = require('../services/projectService');
 const resultService = require('../services/resultService');
+const Student = require('../models/Student');
 
 // Get all projects
 exports.getAllProjects = async (req, res) => {
@@ -34,6 +35,7 @@ exports.getProjectById = async (req, res) => {
 };
 
 // Create a project
+
 exports.createProject = async (req, res) => {
   try {
     const {
@@ -45,9 +47,47 @@ exports.createProject = async (req, res) => {
       githubUrl,
       demoUrl,
       technologies,
-      category
+      category,
+      hackathonId
     } = req.body;
-    
+
+    if (!hackathonId) {
+      return res.status(400).json({ msg: 'hackathonId is required' });
+    }
+
+    // Extract all emails from teamMembers
+    const emails = teamMembers.map(member => member.email);
+
+    // Check if any team member is already in another project for this hackathon
+    const alreadyEnrolled = await Project.find({
+      "teamMembers.email": { $in: emails },
+      hackathon: hackathonId
+    });
+
+    if (alreadyEnrolled.length > 0) {
+      // Collect emails of already enrolled students
+      const enrolledEmails = [];
+      alreadyEnrolled.forEach(project => {
+        project.teamMembers.forEach(member => {
+          if (emails.includes(member.email) && !enrolledEmails.includes(member.email)) {
+            enrolledEmails.push(member.email);
+          }
+        });
+      });
+      return res.status(400).json({
+        msg: 'Some team members are already enrolled in another project for this hackathon',
+        alreadyEnrolled: enrolledEmails
+      });
+    }
+
+    // Check if all team members are registered students
+    const registeredStudents = await Student.find({ email: { $in: emails } }).select('email');
+    const registeredEmails = registeredStudents.map(s => s.email);
+    const notRegistered = emails.filter(email => !registeredEmails.includes(email));
+    if (notRegistered.length > 0) {
+      return res.status(400).json({ msg: 'Some team members are not registered', notRegistered });
+    }
+
     const project = await projectService.createProject({
       name,
       description,
@@ -57,15 +97,17 @@ exports.createProject = async (req, res) => {
       githubUrl,
       demoUrl,
       technologies: technologies || [],
-      category
+      category,
+      hackathon: hackathonId
     });
-    
+
     res.json(project);
   } catch (err) {
-    console.error(err.message);
+    console.error("Error Creating project ", err.message);
     res.status(500).send('Server Error');
   }
 };
+
 
 // Update a project
 exports.updateProject = async (req, res) => {

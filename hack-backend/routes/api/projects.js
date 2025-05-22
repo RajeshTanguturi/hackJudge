@@ -3,11 +3,17 @@ const express = require('express');
 const router = express.Router();
 const projectController = require('../../controllers/projectController');
 const auth = require('../../middleware/auth');
-const { adminOnly } = require('../../middleware/roles');
+const { adminOnly, studentOnly } = require('../../middleware/roles');
+
+
+// @route   POST api/projects
+// @desc    Create a project
+// @access  Student only
+router.post('/create', auth, studentOnly, projectController.createProject);
 
 // @route   GET api/projects
 // @desc    Get all projects
-// @access  Private
+// @access  Privaters
 router.get('/', auth, projectController.getAllProjects);
 
 // @route   GET api/projects/:id
@@ -18,7 +24,7 @@ router.get('/:id', auth, projectController.getProjectById);
 // @route   POST api/projects
 // @desc    Create a project
 // @access  Admin only
-router.post('/', auth, adminOnly, projectController.createProject);
+// router.post('/', auth, adminOnly, projectController.createProject);
 
 // @route   PUT api/projects/:id
 // @desc    Update a project

@@ -1,7 +1,8 @@
 // controllers/judgeController.js
 const Judge = require('../models/Judge');
 const judgeService = require('../services/judgeService');
-
+const Hackathon = require('../models/Hackathon');
+const bcrypt = require('bcryptjs');
 // Get all judges
 exports.getAllJudges = async (req, res) => {
   try {
@@ -37,29 +38,48 @@ exports.getJudgeById = async (req, res) => {
   }
 };
 
-// Create a judge
+
+// Create a judge for a hackathon (Organizer only)
 exports.createJudge = async (req, res) => {
   try {
-    const { name, email, password, role, organization, title } = req.body;
-    
-    // Check if judge already exists
-    let judge = await Judge.findOne({ email });
-    if (judge) {
-      return res.status(400).json({ msg: 'Judge already exists' });
+    const { name, email, password, hackathonId } = req.body;
+    const organizerId = req.user.id; // assuming req.user is set by auth middleware
+
+    // Validate hackathon ownership
+    const hackathon = await Hackathon.findOne({ _id: hackathonId, organizer: organizerId });
+    if (!hackathon) {
+      return res.status(403).json({ msg: 'You do not have permission to add judges to this hackathon.' });
     }
-    
-    judge = await judgeService.createJudge({
+
+    // Check if judge already exists
+    let judge = await Judge.findOne({ email, hackathon: hackathonId });
+    if (judge) {
+      return res.status(400).json({ msg: 'Judge with this email already exists for this hackathon.' });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create judge
+    judge = new Judge({
       name,
       email,
-      password,
-      role: role || 'judge',
-      organization,
-      title
+      password: hashedPassword,
+      hackathon: hackathonId,
+      organizer: organizerId
     });
-    
-    res.json(judge);
+
+    await judge.save();
+
+    // Optionally, add judge to hackathon's judges array
+    hackathon.judges.push(judge._id);
+    await hackathon.save();
+
+    // Return judge info (excluding password)
+    const { password: _, ...judgeData } = judge.toObject();
+    res.status(201).json(judgeData);
   } catch (err) {
-    console.error(err.message);
+    console.error('Error creating judge:', err.message);
     res.status(500).send('Server Error');
   }
 };

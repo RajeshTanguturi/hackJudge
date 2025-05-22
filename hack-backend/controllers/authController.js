@@ -3,7 +3,146 @@ const Judge = require('../models/Judge');
 const jwt = require('jsonwebtoken');
 const config = require('../config/default');
 const bcrypt = require('bcryptjs');
+const Student = require('../models/Student');
+const Organizer = require('../models/Organizer');
 
+// Register
+exports.registerStudent = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    let student = await Student.findOne({ email });
+    if (student) {
+      return res.status(400).json({ msg: 'Student already exists' });
+    }
+    student = new Student({ name, email, password });
+    await student.save();
+    // Create JWT
+    const payload = {
+      user: {
+        id: student.id,
+        role: 'student'
+      }
+    };
+    jwt.sign(
+      payload,
+      config.jwtSecret,
+      { expiresIn: '24h' },
+      (err, token) => {
+        if (err) throw err;
+        res.json({ token });
+      }
+    );
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+// Register Organizer
+exports.registerOrganizer = async (req, res) => {
+  try {
+    const { name, email, password, organization } = req.body;
+    let organizer = await Organizer.findOne({ email });
+    if (organizer) {
+      return res.status(400).json({ msg: 'Organizer already exists' });
+    }
+    organizer = new Organizer({ name, email, password, organization });
+    await organizer.save();
+    // Create JWT
+    const payload = {
+      user: {
+        id: organizer.id,
+        role: 'organizer'
+      }
+    };
+    jwt.sign(
+      payload,
+      config.jwtSecret,
+      { expiresIn: '24h' },
+      (err, token) => {
+        if (err) throw err;
+        res.json({ token });
+      }
+    );
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+// Student login
+exports.loginStudent = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Find judge by email
+    const student = await Student.findOne({ email });
+    
+    if (!student) {
+      return res.status(400).json({ msg: 'Invalid credentials' });
+    }
+    
+    // Check password
+    const isMatch = await student.comparePassword(password);
+    
+    if (!isMatch) {
+      return res.status(400).json({ msg: 'Invalid credentials' });
+    }
+    
+    // Create JWT
+    const payload = {
+      user: {
+        id: student.id,
+        role: 'student'
+      }
+    };
+    
+    jwt.sign(
+      payload,
+      config.jwtSecret,
+      { expiresIn: '24h' },
+      (err, token) => {
+        if (err) throw err;
+        res.json({ token });
+      }
+    );
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+// Organizer login
+exports.loginOrganizer = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const organizer = await Organizer.findOne({ email });
+    if (!organizer) {
+      return res.status(400).json({ msg: 'Invalid credentials' });
+    }
+    const isMatch = await organizer.comparePassword(password);
+    if (!isMatch) {
+      return res.status(400).json({ msg: 'Invalid credentials' });
+    }
+    const payload = {
+      user: {
+        id: organizer.id,
+        role: 'organizer'
+      }
+    };
+    jwt.sign(
+      payload,
+      config.jwtSecret,
+      { expiresIn: '24h' },
+      (err, token) => {
+        if (err) throw err;
+        res.json({ token });
+      }
+    );
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
 // Login
 exports.login = async (req, res) => {
   try {
@@ -76,7 +215,6 @@ exports.logout = async (req, res) => {
 exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    
     // Find judge
     const judge = await Judge.findById(req.user.id);
     

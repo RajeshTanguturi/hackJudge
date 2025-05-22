@@ -6,7 +6,12 @@ exports.adminOnly = (req, res, next) => {
   }
   next();
 };
-
+exports.studentOnly = (req, res, next) => {
+  if (req.user.role !== 'student') {
+    return res.status(403).json({ msg: 'Access denied. Student only.' });
+  }
+  next();
+};
 // Judge only middleware
 exports.judgeOnly = (req, res, next) => {
   if (req.user.role !== 'judge') {

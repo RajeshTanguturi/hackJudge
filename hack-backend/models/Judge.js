@@ -22,12 +22,24 @@ const JudgeSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['judge', 'admin'],
+    enum: ['judge', 'admin', 'student'],
     default: 'judge'
   },
   organization: {
     type: String,
     trim: true
+  },
+  organization: {
+    type: String,
+    trim: true
+  },
+  hackathon: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Hackathon'
+  },
+  organizer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Organizer'
   },
   title: {
     type: String,
