@@ -18,7 +18,7 @@ exports.getAllJudges = async (req, res) => {
 exports.getJudgeById = async (req, res) => {
   try {
     // Check if user is admin or self
-    if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
+    if (req.user.role !== 'organizer' && req.user.id !== req.params.id) {
       return res.status(403).json({ msg: 'Access denied' });
     }
 
@@ -57,14 +57,11 @@ exports.createJudge = async (req, res) => {
       return res.status(400).json({ msg: 'Judge with this email already exists for this hackathon.' });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     // Create judge
     judge = new Judge({
       name,
       email,
-      password: hashedPassword,
+      password,
       hackathon: hackathonId,
       organizer: organizerId
     });
@@ -87,24 +84,11 @@ exports.createJudge = async (req, res) => {
 // Update a judge
 exports.updateJudge = async (req, res) => {
   try {
-    // Check if user is admin or self
-    if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
-      return res.status(403).json({ msg: 'Access denied' });
-    }
-    
-    const { name, email, role, organization, title, isActive } = req.body;
-
-    // Only admin can update role or active status
-    if ((role || isActive !== undefined) && req.user.role !== 'admin') {
-      return res.status(403).json({ msg: 'Only admins can update role or active status' });
-    }
+    const { name, email, isActive } = req.body;
     
     const updateData = {};
     if (name) updateData.name = name;
     if (email) updateData.email = email;
-    if (role) updateData.role = role;
-    if (organization) updateData.organization = organization;
-    if (title) updateData.title = title;
     if (isActive !== undefined) updateData.isActive = isActive;
     
     const judge = await judgeService.updateJudge(req.params.id, updateData);
@@ -131,7 +115,10 @@ exports.deleteJudge = async (req, res) => {
     if (!judge) {
       return res.status(404).json({ msg: 'Judge not found' });
     }
-    
+    await Hackathon.updateOne(
+      { _id: judge.hackathon },
+      { $pull: { judges: judge._id } }
+    );
     res.json({ msg: 'Judge removed' });
   } catch (err) {
     console.error(err.message);

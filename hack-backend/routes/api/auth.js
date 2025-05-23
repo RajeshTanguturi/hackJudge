@@ -29,7 +29,7 @@ router.post('/login-student', authController.loginStudent);
 
 // @route   POST api/auth/login
 // @desc    Authenticate user & get token
-// @access  Public
+
 router.post('/login', authController.login);
 
 // @route   GET api/auth/me

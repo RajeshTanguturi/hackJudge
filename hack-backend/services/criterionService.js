@@ -16,8 +16,7 @@ exports.createCriterion = async (criterionData) => {
   const criterion = new Criterion(criterionData);
   await criterion.save();
   return criterion;
-};
-
+}
 // Update a criterion
 exports.updateCriterion = async (id, updateData) => {
   return await Criterion.findByIdAndUpdate(

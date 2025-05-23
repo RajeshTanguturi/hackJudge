@@ -60,55 +60,18 @@ exports.getEvaluationsByJudge = async (judgeId) => {
     .sort({ submittedAt: -1 });
 };
 
-// Update project scores when evaluations change
+
 exports.updateProjectScores = async (projectId) => {
-  // Get all evaluations for this project
-  const evaluations = await Evaluation.find({ project: projectId })
-    .populate('scores.criterion');
-  
+  const evaluations = await Evaluation.find({ project: projectId });
   if (evaluations.length === 0) {
-    // If no evaluations, reset scores
     await Project.findByIdAndUpdate(projectId, {
-      averageScores: {},
       totalScore: 0
     });
     return;
   }
-  
-  // Get all criteria
-  const criteria = await Criterion.find({ isActive: true });
-  
-  // Calculate average scores for each criterion
-  const averageScores = new Map();
-  let totalScore = 0;
-  
-  for (const criterion of criteria) {
-    const criterionId = criterion._id.toString();
-    let sum = 0;
-    let count = 0;
-    
-    for (const evaluation of evaluations) {
-      const score = evaluation.scores.find(
-        s => s.criterion._id.toString() === criterionId
-      );
-      
-      if (score) {
-        sum += score.score;
-        count++;
-      }
-    }
-    
-    if (count > 0) {
-      const average = sum / count;
-      const weightedScore = average * criterion.weight;
-      averageScores.set(criterionId, weightedScore);
-      totalScore += weightedScore;
-    }
-  }
-  
-  // Update project with average scores
+  const totalScore = evaluations.reduce((sum, evalDoc) => sum + evalDoc.totalScore, 0) / evaluations.length;
   await Project.findByIdAndUpdate(projectId, {
-    averageScores: Object.fromEntries(averageScores),
-    totalScore
+    totalScore: Math.round(totalScore * 100) / 100
   });
 };
+

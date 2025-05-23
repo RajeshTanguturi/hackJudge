@@ -15,24 +15,21 @@ const CriterionSchema = new mongoose.Schema({
     type: Number,
     default: 1,
     min: 0,
-    max: 10
+    max: 100
   },
   maxScore: {
     type: Number,
     default: 10,
     min: 1
   },
-  order: {
-    type: Number,
-    default: 0
+  hackathon: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Hackathon',
+    required: true
   },
   isActive: {
     type: Boolean,
     default: true
-  },
-  category: {
-    type: String,
-    trim: true
   }
 }, { timestamps: true });
 

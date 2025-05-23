@@ -9,7 +9,7 @@ const { adminOnly, studentOnly } = require('../../middleware/roles');
 // @route   POST api/projects
 // @desc    Create a project
 // @access  Student only
-router.post('/create', auth, studentOnly, projectController.createProject);
+router.post('/', auth, studentOnly, projectController.createProject);
 
 // @route   GET api/projects
 // @desc    Get all projects

@@ -61,7 +61,7 @@ exports.createProject = async (req, res) => {
     // Check if any team member is already in another project for this hackathon
     const alreadyEnrolled = await Project.find({
       "teamMembers.email": { $in: emails },
-      hackathon: hackathonId
+      hackathonId: hackathonId
     });
 
     if (alreadyEnrolled.length > 0) {
@@ -98,7 +98,7 @@ exports.createProject = async (req, res) => {
       demoUrl,
       technologies: technologies || [],
       category,
-      hackathon: hackathonId
+      hackathonId: hackathonId
     });
 
     res.json(project);

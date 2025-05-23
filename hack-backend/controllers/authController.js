@@ -147,34 +147,25 @@ exports.loginOrganizer = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
-    // Find judge by email
+    console.log(email, password);
     const judge = await Judge.findOne({ email });
-    
     if (!judge) {
       return res.status(400).json({ msg: 'Invalid credentials' });
     }
-    
-    // Check if account is active
     if (!judge.isActive) {
       return res.status(403).json({ msg: 'Account is inactive. Please contact an administrator.' });
     }
-    
-    // Check password
     const isMatch = await judge.comparePassword(password);
-    
+    console.log(isMatch);
     if (!isMatch) {
-      return res.status(400).json({ msg: 'Invalid credentials' });
+      return res.status(400).json({ msg: 'Invalid Password' });
     }
-    
-    // Create JWT
     const payload = {
       user: {
         id: judge.id,
-        role: judge.role
+        role: "judge"
       }
     };
-    
     jwt.sign(
       payload,
       config.jwtSecret,
@@ -189,6 +180,7 @@ exports.login = async (req, res) => {
     res.status(500).send('Server Error');
   }
 };
+
 
 // Get current user
 exports.getCurrentUser = async (req, res) => {

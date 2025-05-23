@@ -2,7 +2,7 @@ const Hackathon = require('../models/Hackathon');
 
 module.exports = async function(req, res, next) {
   // const hackathonId = req.params.hackathonId || req.body.hackathonId;
-  const hackathonId =  req.params.id;
+  const hackathonId =  req.body.hackathonId || req.params.hackathonId || req.params.id;
   if (!hackathonId) {
     if (req.user && req.user.role === 'organizer') {
       return next();

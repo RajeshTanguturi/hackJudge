@@ -35,23 +35,22 @@ exports.getCriterionById = async (req, res) => {
 // Create a criterion
 exports.createCriterion = async (req, res) => {
   try {
-    const { name, description, weight, maxScore, order, category } = req.body;
-    
-    // Check if criterion already exists
-    let criterion = await Criterion.findOne({ name });
-    if (criterion) {
-      return res.status(400).json({ msg: 'Criterion already exists' });
+    const { name, description, weight, maxScore, hackathonId } = req.body;
+    // Ensure only organizer of the hackathon can create
+    if (req.user.role !== 'organizer') {
+      return res.status(403).json({ msg: 'Only organizers can create criteria.' });
     }
-    
+    let criterion = await Criterion.findOne({ name, hackathon: hackathonId });
+    if (criterion) {
+      return res.status(400).json({ msg: 'Criterion already exists for this hackathon.' });
+    }
     criterion = await criterionService.createCriterion({
       name,
       description,
-      weight: weight || 1,
+      weight: weight || 10,
       maxScore: maxScore || 10,
-      order: order || 0,
-      category
+      hackathon: hackathonId
     });
-    
     res.json(criterion);
   } catch (err) {
     console.error(err.message);
@@ -62,16 +61,14 @@ exports.createCriterion = async (req, res) => {
 // Update a criterion
 exports.updateCriterion = async (req, res) => {
   try {
-    const { name, description, weight, maxScore, order, isActive, category } = req.body;
+    const { name, description, weight, maxScore, isActive } = req.body;
     
     const updateData = {};
     if (name) updateData.name = name;
     if (description) updateData.description = description;
     if (weight) updateData.weight = weight;
     if (maxScore) updateData.maxScore = maxScore;
-    if (order !== undefined) updateData.order = order;
     if (isActive !== undefined) updateData.isActive = isActive;
-    if (category) updateData.category = category;
     
     const criterion = await criterionService.updateCriterion(req.params.id, updateData);
     
@@ -104,6 +101,18 @@ exports.deleteCriterion = async (req, res) => {
     if (err.kind === 'ObjectId') {
       return res.status(404).json({ msg: 'Criterion not found' });
     }
+    res.status(500).send('Server Error');
+  }
+};
+
+// Get all criteria for a given hackathon
+exports.getCriteriaByHackathon = async (req, res) => {
+  try {
+    const { hackathonId } = req.params;
+    const criteria = await Criterion.find({ hackathon: hackathonId, isActive: true }).sort({ order: 1 });
+    res.json(criteria);
+  } catch (err) {
+    console.error(err.message);
     res.status(500).send('Server Error');
   }
 };

@@ -51,7 +51,7 @@ const ProjectSchema = new mongoose.Schema({
   category: {
     type: String,
     trim: true
-  },hackathon: {
+  },hackathonId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Hackathon',
     required: true
