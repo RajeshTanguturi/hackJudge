@@ -78,14 +78,14 @@ exports.loginStudent = async (req, res) => {
     const student = await Student.findOne({ email });
     
     if (!student) {
-      return res.status(400).json({ msg: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Invalid credentials' });
     }
     
     // Check password
     const isMatch = await student.comparePassword(password);
     
     if (!isMatch) {
-      return res.status(400).json({ msg: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Invalid credentials' });
     }
     
     // Create JWT
@@ -143,22 +143,22 @@ exports.loginOrganizer = async (req, res) => {
     res.status(500).send('Server Error');
   }
 };
-// Login
-exports.login = async (req, res) => {
+// Login Judge
+exports.loginJudge = async (req, res) => {
   try {
     const { email, password } = req.body;
     console.log(email, password);
     const judge = await Judge.findOne({ email });
     if (!judge) {
-      return res.status(400).json({ msg: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Invalid credentials' });
     }
     if (!judge.isActive) {
-      return res.status(403).json({ msg: 'Account is inactive. Please contact an administrator.' });
+      return res.status(403).json({ message: 'Account is inactive. Please contact an administrator.' });
     }
     const isMatch = await judge.comparePassword(password);
     console.log(isMatch);
     if (!isMatch) {
-      return res.status(400).json({ msg: 'Invalid Password' });
+      return res.status(400).json({ message: 'Invalid Password' });
     }
     const payload = {
       user: {
