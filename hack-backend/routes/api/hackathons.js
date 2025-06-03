@@ -13,11 +13,15 @@ router.get('/', hackathonController.getAllHackathons);
 // @access  Public
 router.get('/:id', hackathonController.getHackathonById);
 
+// @route   GET api/hackathons/myhackathons
+// @desc    Get hackathons by current organizer
+// @access  Organizer only
+router.get('/my/myhackathons', auth, hackathonController.getHackathonsByOrganizer);
+
 // @route   POST api/hackathons
 // @desc    Create a hackathon
 // @access  Organizer only
 router.post('/', auth, organizerAuth, hackathonController.createHackathon);
-
 // @route   PUT api/hackathons/:id
 // @desc    Update a hackathon
 // @access  Organizer only

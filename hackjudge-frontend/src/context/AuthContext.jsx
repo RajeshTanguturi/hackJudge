@@ -18,12 +18,10 @@ export const AuthProvider = ({ children }) => {
         if (userToken) {
             localStorage.setItem('token', userToken);
             localStorage.setItem('userRole', userRole); // Persist role alongside token
-            axios.defaults.headers.common['x-auth-token'] = userToken;
             setIsAuthenticated(true);
         } else {
             localStorage.removeItem('token');
             localStorage.removeItem('userRole');
-            delete axios.defaults.headers.common['x-auth-token'];
             setIsAuthenticated(false);
         }
     }, [userToken, userRole]); 
@@ -188,7 +186,6 @@ export const AuthProvider = ({ children }) => {
             setUserToken(token);
             setUserRole(role);
             setIsAuthenticated(true);
-            axios.defaults.headers.common['x-auth-token'] = token;
             // Optional: redirect if already logged in and not on a protected page,
             // but be careful with initial render paths.
             // if (!['/student', '/organizer', '/judge'].includes(window.location.pathname) && window.location.pathname !== '/login') {

@@ -8,6 +8,7 @@ import LandingPage from './pages/LandingPage';
 import ExploreHackathonsPage from './pages/ExploreHackathonsPage';
 import LoginForm from './pages/LoginForm';
 import SignupForm from './pages/SignupForm';
+import NotFound from './pages/NotFound';
 import HackathonDetailPage from './pages/HackathonDetailPage';
 import StudentDashboard from './pages/StudentDashboard';
 import OrganizerDashboard from './pages/OrganizerDashboard';
@@ -32,17 +33,19 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/organizer" element={<OrganizerDashboard />} />
+        <Route 
+            path="/organizer" 
+            element={
+              <ProtectedRoute   roles={['ORGANIZER']}>
+                <OrganizerDashboard />
+              </ProtectedRoute>
+            } 
+        />
         <Route path="/judge" element={<JudegeDashboard />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />
     </>
-    // {/* <AuthPage /> */}
-    // {/* <ColorAndGradientShowcase /> */}
-    // {/* <SignUpPage /> */}
-    // {/* <FeatureHighlightSection /> */}
-    // {/* <ExploreHackathonsPage /> */}
-    // {/* <GradientButtonShowcase /> */}
   );
 }
 
